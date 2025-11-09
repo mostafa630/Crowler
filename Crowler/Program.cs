@@ -1,6 +1,9 @@
 ﻿using System.Linq;
+using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
+using Gee.External.Capstone.Arm64;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Pragmastat;
 
 namespace Crowler
@@ -9,66 +12,34 @@ namespace Crowler
     {
         private static string[] SamplesPath = new[]
         {
-            "D:\\SelfDevDemos\\Crowler\\Crowler\\Samples\\s1.txt",
-            "D:\\SelfDevDemos\\Crowler\\Crowler\\Samples\\s2.txt"
+            "/home/sasa/Giza/Tasks/Crowler/Crowler/Samples/s1.txt",
+            "/home/sasa/Giza/Tasks/Crowler/Crowler/Samples/s2.txt"
         };
-        static void Main(string[] args)
+        public static char[] delimiters = { ' ', '\n', '\r' };
+        static async Task Main(string[] args)
         {
-            //read file as a string
-            string text = ReadText();
-            //split string by " "
-            string[] words = Split(text);
-            //store words in a datastructure
-            Dictionary<string, int> keyValuePairs = GetWordsFrequency(words);
-            //print each name with frequency
-            PrintWordsFrequency(keyValuePairs);
+            var tasks = SamplesPath.Select(async (samplePath) =>
+            {
+                string text = await ReadFile(samplePath);
+                await Task.Run(() => ProcessText(text));
+            });
+            await Task.WhenAll(tasks);
+
 
         }
 
-        private static string ReadText()
+        private static void ProcessText(string text)
         {
-            string result = "";
-            foreach (var path in SamplesPath)
-            {
-                string text = File.ReadAllText(path);
-                result = result +" " + text;
-            }
-            return result;
+            string[] words = text._Split(delimiters);
+            var wordsFrequency = GetWordsFrequency(words);
+            PrintWordsFrequency(wordsFrequency);
         }
 
-        private static string[] Split(string text)
+        private static async Task<string> ReadFile(string path)
         {
-            List<string> list = new List<string>();
-            string word = "";
-            foreach (var ch in text)
-            {
-                if(ch == '\r')
-                    continue;
-
-                if ((ch == ' ' || ch == '\n') && word.Length != 0)
-                {
-                    list.Add(word);
-                    word = "";
-                }
-                else
-                {
-                    word += ch;
-                }
-            }
-            if (word != "")
-                list.Add(word);
-
-            string[] arr=new string[list.Count];
-            int i = 0;
-            foreach (var item in list)
-            {
-                arr[i++] = item;
-            }
-
-            return arr;
+            return await File.ReadAllTextAsync(path);
         }
-
-        private static Dictionary<string,int> GetWordsFrequency(string[] words)
+        private static Dictionary<string, int> GetWordsFrequency(string[] words)
         {
             Dictionary<string, int> dict = new Dictionary<string, int>();
             foreach (var word in words)
