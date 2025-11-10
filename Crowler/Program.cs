@@ -20,22 +20,24 @@
             {
                 tasks.Add(Task.Run(async () =>
                 {
-                    string text = await File.ReadAllTextAsync(path);
-                    await Task.Run(() => ProcessText(text));
+                    await ProcessFile(path);
                 }));
             }
             await Task.WhenAll(tasks);
             PrintWordsFrequency(Frequency);
+        }
+        private static async Task ProcessFile(string filePath)
+        {
+            string text = await File.ReadAllTextAsync(filePath);
+            await Task.Run(() => ProcessText(text));
         }
         private static void ProcessText(string text)
         {
             string[] words = text._Split(delimiters);
             CalculateWordsFrequency(words);
         }
-
         private static void CalculateWordsFrequency(string[] words)
         {
-
             foreach (var word in words)
             {
                 lock (_lock)
@@ -50,7 +52,6 @@
                     }
                 }
             }
-
         }
         private static void PrintWordsFrequency(Dictionary<string, int> dict)
         {
