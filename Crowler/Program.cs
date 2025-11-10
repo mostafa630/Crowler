@@ -7,11 +7,11 @@
             "Samples/s1.txt",
             "Samples/s2.txt"
         };
-        public static readonly char[] delimiters = { ' ', '\n', '\r' };
+        private static readonly char[] delimiters = { ' ', '\n', '\r' };
 
-        public static Dictionary<string, int> Frequency = new Dictionary<string, int>();
+        private static Dictionary<string, int> Frequency = new Dictionary<string, int>();
 
-        public static object _lock = new();
+        private static object _lock = new();
         static async Task Main(string[] args)
         {
             var tasks = new List<Task>();
