@@ -14,23 +14,31 @@
         private static object _lock = new();
         static async Task Main(string[] args)
         {
+            var Semaphore = new SemaphoreSlim(4);
             var tasks = new List<Task>();
 
             foreach (string path in SamplesPath)
             {
                 tasks.Add(Task.Run(async () =>
                 {
-                    await ProcessFile(path);
+                    string text = await File.ReadAllTextAsync(path);
+
+                    await Semaphore.WaitAsync();
+                    try
+                    {
+                        ProcessText(text);
+                    }
+                    finally
+                    {
+                        Semaphore.Release();
+                    }
                 }));
             }
+
             await Task.WhenAll(tasks);
             PrintWordsFrequency(Frequency);
         }
-        private static async Task ProcessFile(string filePath)
-        {
-            string text = await File.ReadAllTextAsync(filePath);
-            await Task.Run(() => ProcessText(text));
-        }
+
         private static void ProcessText(string text)
         {
             string[] words = text._Split(delimiters);
