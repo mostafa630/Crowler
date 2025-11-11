@@ -14,22 +14,26 @@
         private static object _lock = new();
         static async Task Main(string[] args)
         {
-            var tasks = new List<Task>();
+            var threads = new List<Thread>();
 
             foreach (string path in SamplesPath)
             {
-                tasks.Add(Task.Run(async () =>
+                var thread = new Thread(() =>
                 {
-                    await ProcessFile(path);
-                }));
+                    ProcessFile(path).GetAwaiter().GetResult();
+                });
+                threads.Add(thread);
+                thread.Start();
             }
-            await Task.WhenAll(tasks);
+            foreach (var t in threads)
+                t.Join();
+
             PrintWordsFrequency(Frequency);
         }
         private static async Task ProcessFile(string filePath)
         {
             string text = await File.ReadAllTextAsync(filePath);
-            await Task.Run(() => ProcessText(text));
+            ProcessText(text);
         }
         private static void ProcessText(string text)
         {
